@@ -1,5 +1,5 @@
 # G-Coder
-A Python class useful for generating g-code.
+A Python class useful for generating g-code for pen plotters.
 
 ## Features
 A list of features will go here.
