@@ -177,9 +177,9 @@ class GCoder:
         self.move_to(self.POS_HOME)
         self.add_space()
 
-        self.__close_file()
+        self.close_file()
     
-    def __close_file(self):
+    def close_file(self):
         """Closes the g-code file and locks the GCoder instance."""
         self.__file.flush()
         self.__file.close()
