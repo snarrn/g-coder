@@ -103,7 +103,7 @@ class GCoder:
         self.add_command(f"G1 F{self._movement_speed} ; Set movement speed")
     
     @require_unlocked
-    def draw_path(self, path: Sequence[Point2D], scale: float | tuple[float, float] = 1.0, offset: tuple[float, float] = (0.0, 0.0), drag_to_start: bool = False, loop_to_start: bool = False):
+    def draw_path(self, path: Sequence[Point2D], scale: float | tuple[float, float] = 1.0, offset: tuple[float, float] = (0.0, 0.0), quick_move_to_start: bool = False, drag_to_start: bool = False, loop_to_start: bool = False):
         """Draws along a path of points, which may be scaled and given an offset. Set 'drag_to_start' to True to keep the pen down when moving to the start of the path. Set 'loop_to_start' to True to draw from the last point to the first."""
         if len(path) == 0:
             return
@@ -122,7 +122,7 @@ class GCoder:
         else:
             modified_path = tuple((pos[0] * scale[0] + offset[0], pos[1] * scale[1] + offset[1]) for pos in path)
         
-        self.move_to(modified_path[0])
+        self.move_to(modified_path[0], quick_move=quick_move_to_start)
         self.pendown()
 
         for pos in modified_path[1:]:
