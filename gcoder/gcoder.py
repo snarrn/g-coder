@@ -116,7 +116,7 @@ class GCoder:
         else:
             self.penup()
         
-        if isinstance(scale, float):
+        if isinstance(scale, (float, int)):
             modified_path = tuple((pos[0] * scale + offset[0], pos[1] * scale + offset[1]) for pos in path)
         
         else:
