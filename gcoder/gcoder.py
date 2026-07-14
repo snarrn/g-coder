@@ -49,11 +49,11 @@ class GCoder:
         return not self._pen_is_up
 
     def __init__(self, drawing_name: str | None = None, movement_speed: float | None = None):
-        self._drawing_name = drawing_name or GCoder.DEFAULT_DRAWING_NAME
-        self._movement_speed = movement_speed or GCoder.DEFAULT_MOVEMENT_SPEED
+        self._drawing_name = drawing_name or self.DEFAULT_DRAWING_NAME
+        self._movement_speed = movement_speed or self.DEFAULT_MOVEMENT_SPEED
 
         self._pen_is_up = False
-        self._pen_pos = GCoder.POS_HOME
+        self._pen_pos = self.POS_HOME
 
         self.is_locked = False
 
@@ -78,7 +78,7 @@ class GCoder:
         self.add_comment(f"{self._drawing_name}", prefix="; ", as_header=True)
         self.set_movement_speed(self._movement_speed)
         self.penup()
-        self.move_to(GCoder.POS_HOME, quick_move=True)
+        self.move_to(self.POS_HOME, quick_move=True)
         self.add_comment("^ Here is where the initial commands go for setup...")
         self.add_space()
         
@@ -141,15 +141,15 @@ class GCoder:
     @require_unlocked
     def move_to(self, pos: Point2D, quick_move: bool = False):
         """Moves to a new position. Set 'quick_move' to True for g-code 'G00' (instead of 'G01')."""
-        self.add_command(("G00" if quick_move else "G01") + f" X{pos[0]:.{GCoder.ROUND_POS_TO}f} Y{pos[1]:.{GCoder.ROUND_POS_TO}f}")
-        self._pen_pos = (round(pos[0], GCoder.ROUND_POS_TO), round(pos[1], GCoder.ROUND_POS_TO))
+        self.add_command(("G00" if quick_move else "G01") + f" X{pos[0]:.{self.ROUND_POS_TO}f} Y{pos[1]:.{self.ROUND_POS_TO}f}")
+        self._pen_pos = (round(pos[0], self.ROUND_POS_TO), round(pos[1], self.ROUND_POS_TO))
     
     @require_unlocked
     def penup(self):
         """Moves the pen up, if it isn't already."""
         if self.pen_is_down:
-            self.add_command(GCoder.COMMAND_PEN_UP)
-            self.wait(GCoder.WAIT_TIME_PEN_MOVE)
+            self.add_command(self.COMMAND_PEN_UP)
+            self.wait(self.WAIT_TIME_PEN_MOVE)
 
             self._pen_is_up = True
     
@@ -157,8 +157,8 @@ class GCoder:
     def pendown(self):
         """Moves the pen down, if it isn't already."""
         if self.pen_is_up:
-            self.add_command(GCoder.COMMAND_PEN_DOWN)
-            self.wait(GCoder.WAIT_TIME_PEN_MOVE)
+            self.add_command(self.COMMAND_PEN_DOWN)
+            self.wait(self.WAIT_TIME_PEN_MOVE)
 
             self._pen_is_up = False
     
@@ -166,7 +166,7 @@ class GCoder:
     def wait(self, time: float):
         """Waits the given amount of time. Ignores non-positive values."""
         if time > 0:
-            self.add_command(f"G4 P{time:.{GCoder.ROUND_TIME_TO}f} ; Wait for {time:.{GCoder.ROUND_TIME_TO}f} seconds")
+            self.add_command(f"G4 P{time:.{self.ROUND_TIME_TO}f} ; Wait for {time:.{self.ROUND_TIME_TO}f} seconds")
     
     @require_unlocked
     def save_drawing(self):
@@ -174,7 +174,7 @@ class GCoder:
         self.add_space()
         self.add_comment("Ending the Drawing", as_header=True)
         self.penup()
-        self.move_to(GCoder.POS_HOME)
+        self.move_to(self.POS_HOME)
         self.add_space()
 
         self.__close_file()
