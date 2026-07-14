@@ -1,13 +1,14 @@
 # G-Coder
 A Python class useful for generating g-code for pen plotters.
 
-## Features
-A list of features will go here.
-
-## Code Examples
-`
-Code examples will go here soon.
-`
+## Class Features
+The following are some of the methods of the GCoder class. These write g-code commands to the output g-code file.
+* `add_comment`
+* `penup`
+* `pendown`
+* `move_to`
+* `draw_path`
+* `wait`
 
 ## How to Use
 Instructions on how to use the project will go here.
