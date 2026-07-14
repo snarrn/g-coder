@@ -29,6 +29,10 @@ class GCoder:
     WAIT_TIME_PEN_MOVE = 0
 
     @property
+    def drawing_name(self):
+        return self._drawing_name
+
+    @property
     def movement_speed(self):
         return self._movement_speed
     
