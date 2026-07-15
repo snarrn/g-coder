@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gcoder"
-version = "1.0.0"
+version = "1.0.1"
 description = "A Python class useful for generating g-code for pen plotters"
 authors = [{ name="Nathan Snarr" }]
 license = { file = "LICENSE.md" }
