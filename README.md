@@ -64,7 +64,7 @@ The output `.gcode` file is placed in the current working directory. The output 
 ## Installing the Project
 To install the project as a Python package, enter the command `pip install git+https://github.com/snarrn/g-coder.git` in a terminal. You can then import the package in Python using `from gcoder import GCoder` or just `import gcoder`.
 
-If you would like to modify the project, you may clone it using `git clone https://github.com/snarrn/g-coder.git`. Look at the _License_ section and _LICENSE.md_ file for more information on how you can use this project.
+If you would like to modify the project, you may clone it using `git clone https://github.com/snarrn/g-coder.git`. Look at the __License__ section and `LICENSE.md` file for more information on how you can use this project.
 
 ## Getting Started
 The `GCoder` class is a base class for writing g-code files for pen plotters. Different pen plotters require different commands to perform different tasks, such as moving the pen up and down. Because of this, you will need to modify a few class variables and a couple of functions to make it work best for your plotter.
@@ -118,7 +118,7 @@ class GCoderEleksDraw(GCoder):
         self.close_file() # Important to have at the end of this method
 ```
 
-It will likely take some searching and testing to determine how you need or want to modify the class. I have found https://marlinfw.org/meta/gcode/ to be very helpful in explaining g-code commands. The following code shows how the GCoder class may be used to write g-code. This code is also available in the _examples_ folder.
+It will likely take some searching and testing to determine how you need or want to modify the class. I have found https://marlinfw.org/meta/gcode/ to be very helpful in explaining g-code commands. The following code shows how the `GCoder` class may be used to write g-code. This code is also available in the _examples_ folder.
 
 ```python
 # examples/draw_shapes.py
@@ -169,6 +169,7 @@ If you installed the project using `pip install git+https://github.com/snarrn/g-
 In the future, I may add these features:
 * Estimated drawing time
 * A drawing visualizer, which shows the pen moving and drawing
+* Automatic comment indentation
 
 ## Contributions
 This project was developed by Nathan Snarr. Generative AI was used for review of code and suggestions.
