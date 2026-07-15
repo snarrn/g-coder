@@ -8,4 +8,4 @@ from .gcoder import GCoder
 
 __all__ = ["GCoder",]
 
-__version__ = "0.0.0"
+__version__ = "1.0.0"
