@@ -163,10 +163,10 @@ class GCoder:
             self._pen_is_up = False
     
     @require_unlocked
-    def wait(self, time: float):
-        """Waits the given amount of time. Ignores non-positive values."""
-        if time > 0:
-            self.add_command(f"G4 P{time:.{self.ROUND_TIME_TO}f} ; Wait for {time:.{self.ROUND_TIME_TO}f} seconds")
+    def wait(self, seconds: float):
+        """Waits the given amount of seconds. Ignores non-positive values."""
+        if seconds > 0:
+            self.add_command(f"G4 P{seconds:.{self.ROUND_TIME_TO}f} ; Wait for {seconds:.{self.ROUND_TIME_TO}f} seconds")
     
     @require_unlocked
     def save_drawing(self):
