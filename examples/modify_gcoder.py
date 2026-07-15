@@ -1,17 +1,17 @@
 # Modify GCoder
 """
-Showcases how to make a subclass of GCoder that will work with your pen plotter.
+Showcases how to make a child class of the GCoder class that will work with your pen plotter.
 These particular edits were made to work with an EleksMaker EleksDraw.
 """
 from gcoder import GCoder, require_unlocked
 
-class GCoderMyPlotter(GCoder):
+class GCoderEleksDraw(GCoder):
 
-    DEFAULT_DRAWING_NAME = "MyEleksMakerDrawing"
-    DEFAULT_MOVEMENT_SPEED = 10
+    DEFAULT_DRAWING_NAME = "MyEleksDrawDrawing"
+    DEFAULT_MOVEMENT_SPEED = 200
 
     POS_HOME = (0, 0)
-    ROUND_POS_TO = 2
+    ROUND_POS_TO = 4
     ROUND_TIME_TO = 4
 
     COMMAND_PEN_UP = "M03 S0  ; Penup"
@@ -29,20 +29,20 @@ class GCoderMyPlotter(GCoder):
         self.set_movement_speed(self.movement_speed)
         self.add_space()
 
-        self.add_comment("--- Homing ---")
+        self.add_comment("Homing", as_header=True)
         self.penup()
         self.move_to(self.POS_HOME, quick_move=True)
         self.add_space()
 
-        self.add_comment("--- Start Drawing! ---")
+        self.add_comment("Start Drawing!", as_header=True)
     
     @require_unlocked
     def save_drawing(self):
-        """Saves the g-code file. This GCoderMyPlotter instance should no longer be used."""
+        """Saves the g-code file. This GCoderEleksDraw instance should no longer be used."""
         self.add_space()
         self.add_comment("Ending the Drawing", as_header=True)
         self.penup()
         self.move_to(self.POS_HOME)
         self.add_space()
 
-        self.close_file()
+        self.close_file() # Important to have at the end of this method
