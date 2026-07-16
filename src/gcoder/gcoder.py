@@ -37,8 +37,8 @@ class GCoder:
     def pen_is_down(self):
         return not self._pen_is_up
 
-    def __init__(self, profile: PlotterProfile, drawing_name: str = "MyDrawing", pen_starts_up: bool = False):
-        self.profile = profile
+    def __init__(self, profile: PlotterProfile | None = None, drawing_name: str = "MyDrawing", pen_starts_up: bool = False):
+        self.profile = profile or PlotterProfile()
         self._drawing_name = drawing_name
 
         self._movement_speed = self.profile.default_movement_speed
