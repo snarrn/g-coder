@@ -1,7 +1,7 @@
 # G-Coder Class
 from typing import Tuple, Sequence
 from functools import wraps
-from plotter_profile import PlotterProfile
+from .plotter_profile import PlotterProfile
 Point2D = Tuple[float, float]
 
 def require_unlocked(method):
