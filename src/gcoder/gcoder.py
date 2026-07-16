@@ -1,7 +1,8 @@
 # G-Coder Class
-from typing import Sequence
+from typing import Tuple, Sequence
 from functools import wraps
-Point2D = tuple[float, float]
+from plotter_profile import PlotterProfile
+Point2D = Tuple[float, float]
 
 def require_unlocked(method):
     @wraps(method)
@@ -15,18 +16,6 @@ class GCoder:
     """
     Generates g-code for pen plotters.
     """
-
-    DEFAULT_DRAWING_NAME = "MyDrawing"
-    DEFAULT_MOVEMENT_SPEED = 10
-
-    POS_HOME = (0, 0)
-    ROUND_POS_TO = 4
-    ROUND_TIME_TO = 4
-
-    COMMAND_PEN_UP = "; <g-code for moving the pen up>"
-    COMMAND_PEN_DOWN = "; <g-code for moving the pen down>"
-
-    WAIT_TIME_PEN_MOVE = 0
 
     @property
     def drawing_name(self):
@@ -48,18 +37,19 @@ class GCoder:
     def pen_is_down(self):
         return not self._pen_is_up
 
-    def __init__(self, drawing_name: str | None = None, movement_speed: float | None = None):
-        self._drawing_name = drawing_name or self.DEFAULT_DRAWING_NAME
-        self._movement_speed = movement_speed or self.DEFAULT_MOVEMENT_SPEED
+    def __init__(self, profile: PlotterProfile, drawing_name: str = "MyDrawing", pen_starts_up: bool = False):
+        self.profile = profile
+        self._drawing_name = drawing_name
 
-        self._pen_is_up = False
-        self._pen_pos = self.POS_HOME
+        self._movement_speed = self.profile.default_movement_speed
+        self._pen_pos = self.profile.pos_home
 
+        self._pen_is_up = pen_starts_up
         self.is_locked = False
 
         self.__file = open(self._drawing_name + ".gcode", "w")
         self.initialize_file()
-    
+
     @require_unlocked
     def __enter__(self):
         """Enters a context via the 'with' statement."""
@@ -67,22 +57,22 @@ class GCoder:
     
     @require_unlocked
     def __exit__(self, exc_type, exc_value, traceback):
-        """Exits the context of a 'with' statement, which closes the gcode file. This GCoder instance should not be used anymore."""
+        """Exits the context of a 'with' statement, which closes the gcode file. This GCoder instance should no longer be used."""
         self.save_drawing()
 
         return False
     
     @require_unlocked
     def initialize_file(self):
-        """Writes the header and initial commands to the gcode file."""
-        self.add_comment(f"{self._drawing_name}", prefix="; ", as_header=True)
-        self.set_movement_speed(self._movement_speed)
-        self.penup()
-        self.move_to(self.POS_HOME, quick_move=True)
-        self.add_comment("^ Here is where the initial commands go for setup...")
-        self.add_space()
+        """Writes the g-code file header.
         
-        self.add_comment("Start Drawing", as_header=True)
+        The header is based on profile.header_hook or, if profile.header_hook is None, then each string from profile.header_commands is written on a new line."""
+        if self.profile.header_hook is not None:
+            self.profile.header_hook(self)
+        
+        else:
+            for command in self.profile.header_commands:
+                self.add_command(command)
 
     @require_unlocked
     def add_space(self, num_blank_lines: int = 1):
@@ -141,15 +131,15 @@ class GCoder:
     @require_unlocked
     def move_to(self, pos: Point2D, quick_move: bool = False):
         """Moves to a new position. Set 'quick_move' to True for g-code 'G00' (instead of 'G01')."""
-        self.add_command(("G00" if quick_move else "G01") + f" X{pos[0]:.{self.ROUND_POS_TO}f} Y{pos[1]:.{self.ROUND_POS_TO}f}")
-        self._pen_pos = (round(pos[0], self.ROUND_POS_TO), round(pos[1], self.ROUND_POS_TO))
+        self.add_command(("G00" if quick_move else "G01") + f" X{pos[0]:.{self.profile.round_pos_to}f} Y{pos[1]:.{self.profile.round_pos_to}f}")
+        self._pen_pos = (round(pos[0], self.profile.round_pos_to), round(pos[1], self.profile.round_pos_to))
     
     @require_unlocked
     def penup(self):
         """Moves the pen up, if it isn't already."""
         if self.pen_is_down:
-            self.add_command(self.COMMAND_PEN_UP)
-            self.wait(self.WAIT_TIME_PEN_MOVE)
+            self.add_command(self.profile.command_pen_up)
+            self.wait(self.profile.wait_time_pen_move)
 
             self._pen_is_up = True
     
@@ -157,8 +147,8 @@ class GCoder:
     def pendown(self):
         """Moves the pen down, if it isn't already."""
         if self.pen_is_up:
-            self.add_command(self.COMMAND_PEN_DOWN)
-            self.wait(self.WAIT_TIME_PEN_MOVE)
+            self.add_command(self.profile.command_pen_down)
+            self.wait(self.profile.wait_time_pen_move)
 
             self._pen_is_up = False
     
@@ -166,17 +156,20 @@ class GCoder:
     def wait(self, seconds: float):
         """Waits the given amount of seconds. Ignores non-positive values."""
         if seconds > 0:
-            self.add_command(f"G4 P{seconds:.{self.ROUND_TIME_TO}f} ; Wait for {seconds:.{self.ROUND_TIME_TO}f} seconds")
+            self.add_command(f"G4 P{seconds:.{self.profile.round_time_to}f} ; Wait for {seconds:.{self.profile.round_time_to}f} seconds")
     
     @require_unlocked
     def save_drawing(self):
-        """Saves the g-code file. This GCoder instance should no longer be used."""
-        self.add_space()
-        self.add_comment("Ending the Drawing", as_header=True)
-        self.penup()
-        self.move_to(self.POS_HOME)
-        self.add_space()
-
+        """Writes the g-code file footer and closes the file. This GCoder instance should no longer be used.
+        
+        The footer is based on profile.footer_hook or, if profile.footer_hook is None, then each string from profile.footer_commands is written on a new line."""
+        if self.profile.footer_hook is not None:
+            self.profile.footer_hook(self)
+        
+        else:
+            for command in self.profile.footer_commands:
+                self.add_command(command)
+        
         self.close_file()
     
     def close_file(self):
