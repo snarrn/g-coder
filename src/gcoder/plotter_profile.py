@@ -5,8 +5,8 @@ Point2D = Tuple[float, float]
 
 @dataclass
 class PlotterProfile:
-    command_pen_up: str = ""
-    command_pen_down: str = ""
+    command_pen_up: str = "; Penup"
+    command_pen_down: str = "; Pendown"
 
     wait_time_pen_move: float = 0.25
     default_movement_speed: float = 10
