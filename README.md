@@ -1,5 +1,5 @@
 # G-Coder
-A lightweight Python class useful for generating g-code for pen plotters.
+A lightweight Python package for generating g-code for pen plotters.
 
 ## Features
 * Drawing paths
@@ -12,50 +12,60 @@ A lightweight Python class useful for generating g-code for pen plotters.
 ```python
 from gcoder import GCoder
 
-with GCoder("MyDrawing", movement_speed=10) as g:
-    g.add_comment("Hello, World!")
-    g.move_to((4, 2))
+with GCoder(drawing_name="Squares") as g:
+    g.add_comment("Drawing the Inside Square", prefix="; ", as_header=True)
+    g.penup()
+    g.set_movement_speed(150)
+
+    g.move_to((-5, -5))
     g.pendown()
-    g.move_to((2, 4))
+    g.move_to((5, -5))
+    g.move_to((5, 5))
+    g.move_to((-5, 5))
+    g.move_to((-5, -5))
     g.penup()
 
-    pnts = ((0, 1), (1, -1), (2, 1), (3, -1))
-
-    g.add_space()
-    g.add_comment("Drawing Zig-Zag", as_header=True)
     g.wait(seconds=5)
-    g.draw_path(path=pnts, scale=5, offset=(0, 0))
+    g.add_space()
+
+    g.add_comment("Drawing the Outside Square", as_header=True)
+    square_pnts = ((-1, -1), (1, -1), (1, 1), (-1, 1))
+    g.draw_path(path=square_pnts, scale=10, offset=(0, 0), loop_to_start=True)
+
+    g.move_to((0, 0))
 ```
 
 __Output:__
 ```none
-; --- MyDrawing ---
-G1 F10 ; Set movement speed
-; <g-code for moving the pen up>
-G00 X0.0000 Y0.0000
-; ^ Here is where the initial commands go for setup...
-
-; --- Start Drawing ---
-; Hello, World!
-G01 X4.0000 Y2.0000
-; <g-code for moving the pen down>
-G01 X2.0000 Y4.0000
-; <g-code for moving the pen up>
-
-; --- Drawing Zig-Zag ---
-G4 P5.0000 ; Wait for 5.0000 seconds
-G01 X0.0000 Y5.0000
-; <g-code for moving the pen down>
+; --- Drawing the Inside Square ---
+; Penup
+G4 P0.2500 ; Wait for 0.2500 seconds
+G1 F150 ; Set movement speed
+G01 X-5.0000 Y-5.0000
+; Pendown
+G4 P0.2500 ; Wait for 0.2500 seconds
 G01 X5.0000 Y-5.0000
-G01 X10.0000 Y5.0000
-G01 X15.0000 Y-5.0000
-; <g-code for moving the pen up>
+G01 X5.0000 Y5.0000
+G01 X-5.0000 Y5.0000
+G01 X-5.0000 Y-5.0000
+; Penup
+G4 P0.2500 ; Wait for 0.2500 seconds
+G4 P5.0000 ; Wait for 5.0000 seconds
 
-; --- Ending the Drawing ---
+; --- Drawing the Outside Square ---
+G01 X-10.0000 Y-10.0000
+; Pendown
+G4 P0.2500 ; Wait for 0.2500 seconds
+G01 X10.0000 Y-10.0000
+G01 X10.0000 Y10.0000
+G01 X-10.0000 Y10.0000
+G01 X-10.0000 Y-10.0000
+; Penup
+G4 P0.2500 ; Wait for 0.2500 seconds
 G01 X0.0000 Y0.0000
 ```
 
-The output `.gcode` file is placed in the current working directory. The output shown above includes a default header and footer as well as some placeholder commands. See __Getting Started__ to find out how to change these.
+The output `.gcode` file is placed in the current working directory. The output shown above includes placeholder commands for moving the pen up or down, because that command varies among different pen plotters. See __Getting Started__ to find out how to change these.
 
 ## Requirements
 * Python 3.10+
@@ -67,100 +77,55 @@ To install the project as a Python package, enter the command `pip install git+h
 If you would like to modify the project, you may clone it using `git clone https://github.com/snarrn/g-coder.git`. Look at the __License__ section and `LICENSE.md` file for more information on how you can use this project.
 
 ## Getting Started
-The `GCoder` class is a base class for writing g-code files for pen plotters. Different pen plotters require different commands to perform different tasks, such as moving the pen up and down. Because of this, you will need to modify a few class variables and a couple of functions to make it work best for your plotter.
+The `GCoder` class can be used to write g-code for a variety of pen plotters. Different pen plotters require different commands to perform tasks, such as moving the pen up and down. Because of this, a `PlotterProfile` is used to configure some of these commands, as well as allow for a header and footer to be attached to each g-code file for setup and shutdown.
 
-I recommend creating a subclass of `GCoder`, which inherits all of its methods. I used the `GCoder` class to generate g-code for an EleksMaker EleksDraw plotter. The following code shows the class variables and functions that you should change to fit your plotter. This code is available in the _examples_ folder.
+I used the `GCoder` class to generate g-code for an EleksMaker EleksDraw plotter. The following code shows how I achieved this with `PlotterProfile`. This code is available in the _examples_ folder.
 
 ```python
 # examples/modify_gcoder.py
 from gcoder import GCoder, require_unlocked
+from plotter_profile import PlotterProfile
 
-class GCoderEleksDraw(GCoder):
-
-    DEFAULT_DRAWING_NAME = "MyEleksDrawDrawing"
-    DEFAULT_MOVEMENT_SPEED = 200
-
-    POS_HOME = (0, 0)
-    ROUND_POS_TO = 4
-    ROUND_TIME_TO = 4
-
-    COMMAND_PEN_UP = "M03 S0  ; Penup"
-    COMMAND_PEN_DOWN = "M03 S35 ; Pendown"
-
-    WAIT_TIME_PEN_MOVE = 0.175
-    
-    @require_unlocked
-    def initialize_file(self):
-        """Writes the header and first few commands to the g-code file."""
-        self.add_comment(self.drawing_name, as_header=True)
-        self.add_command("A1   ; Enable EleksDraw RC Servo Mode")
-        self.add_command("G21  ; Set units to millimeters")
-        self.add_command("G90  ; Use absolute positioning")
-        self.set_movement_speed(self.movement_speed)
-        self.add_space()
-
-        self.add_comment("Homing", as_header=True)
-        self.penup()
-        self.move_to(self.POS_HOME, quick_move=True)
-        self.add_space()
-
-        self.add_comment("Start Drawing!", as_header=True)
-    
-    @require_unlocked
-    def save_drawing(self):
-        """Saves the g-code file. This GCoderEleksDraw instance should no longer be used."""
-        self.add_space()
-        self.add_comment("Ending the Drawing", as_header=True)
-        self.penup()
-        self.move_to(self.POS_HOME)
-        self.add_space()
-
-        self.close_file() # Important to have at the end of this method
-```
-
-It will likely take some searching and testing to determine how you need or want to modify the class. I have found https://marlinfw.org/meta/gcode/ to be very helpful in explaining g-code commands. The following code shows how the `GCoder` class may be used to write g-code. This code is also available in the _examples_ folder.
-
-```python
-# examples/draw_shapes.py
-from gcoder import GCoder
-import math
-
-# Using the 'with' context
-with GCoder("square_and_circle_1", movement_speed=25) as g:
-    g.add_comment("Drawing the Square", as_header=True)
-    square_pnts = ((-1, -1), (1, -1), (1, 1), (-1, 1))
-    g.draw_path(path=square_pnts, scale=10, quick_move_to_start=True, loop_to_start=True)
-
+def eleks_header(g: GCoder):
+    """Writes a g-code file header for the EleksMaker EleksDraw."""
+    g.add_comment(g.drawing_name, as_header=True, prefix="; ")
+    g.add_command("A1   ; Enable EleksDraw RC Servo Mode")
+    g.add_command("G21  ; Set units to millimeters")
+    g.add_command("G90  ; Use absolute positioning")
+    g.set_movement_speed(g.movement_speed)
     g.add_space()
-    g.add_comment("Drawing the Circle", as_header=True)
-    circle_pnts = tuple((math.cos(i / 50 * 2 * math.pi) * 10,
-                         math.sin(i / 50 * 2 * math.pi) * 10) for i in range(51))
-    g.draw_path(circle_pnts, quick_move_to_start=True)
-# The 'g' GCoder instance should not be used outside of this context ^
 
-# Without the 'with' context
-h = GCoder(drawing_name="square_and_circle_2")
+    g.add_comment("To Home Position", as_header=True)
+    g.penup()
+    g.move_to(g.profile.pos_home, quick_move=True)
+    g.add_space()
 
-h.add_comment("Drawing the Square", as_header=True)
-h.move_to((-10, -10), quick_move=True)
-h.pendown()
-h.move_to((10, -10))
-h.move_to((10, 10))
-h.move_to((-10, 10))
-h.move_to((-10, -10))
-h.penup()
+    g.add_comment("Start Drawing!", as_header=True)
 
-h.add_space()
-h.add_comment("Drawing the Circle", as_header=True)
-h.move_to((10, 0), quick_move=True)
-h.pendown()
-for i in range(51):
-    ang = i / 50 * 2 * math.pi
-    x, y = math.cos(ang) * 10, math.sin(ang) * 10
-    h.move_to((x, y))
+def eleks_footer(g: GCoder):
+    """Writes a g-code file footer for the EleksMaker EleksDraw."""
+    g.add_space()
+    g.add_comment("Ending the Drawing", as_header=True)
+    g.penup()
+    g.move_to(g.profile.pos_home)
+    g.add_space()
 
-h.save_drawing() # The 'h' GCoder instance should not be used after this method is called
+eleks_profile = PlotterProfile(command_pen_up="M03 S0  ; Penup",
+                               command_pen_down="M03 S35 ; Pendown",
+                               wait_time_pen_move=0.175,
+                               default_movement_speed=200,
+                               pos_home=(0, 0),
+                               round_pos_to=4,
+                               round_time_to=4,
+                               header_hook=eleks_header,
+                               footer_hook=eleks_footer)
+
+with GCoder(profile=eleks_profile, drawing_name="ModifyGCoder") as g:
+    g.add_comment("Test Comment")
+
 ```
+
+It will likely take some searching and testing to determine what your pen plotter needs. As for finding out what g-code commands do what, I have found https://marlinfw.org/meta/gcode/ to be very helpful.
 
 ## Updating the Project
 If you installed the project using `pip install git+https://github.com/snarrn/g-coder.git`, then you may use `pip install --upgrade git+https://github.com/snarrn/g-coder.git` to install the latest version in its place. If you installed the project with `git clone https://github.com/snarrn/g-coder.git`, then use `git pull` to get the latest version.
