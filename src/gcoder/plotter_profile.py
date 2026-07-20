@@ -9,7 +9,7 @@ class PlotterProfile:
     command_pen_down: str = "; Pendown"
 
     wait_time_pen_move: float = 0.25
-    default_movement_speed: float = 10
+    default_speed: float = 10
     pos_home: Point2D = (0, 0)
 
     round_pos_to: int = 4
