@@ -22,8 +22,8 @@ class GCoder:
         return self._drawing_name
 
     @property
-    def movement_speed(self):
-        return self._movement_speed
+    def speed(self):
+        return self._speed
     
     @property
     def pen_pos(self):
@@ -41,7 +41,7 @@ class GCoder:
         self.profile = profile or PlotterProfile()
         self._drawing_name = drawing_name
 
-        self._movement_speed = self.profile.default_movement_speed
+        self._speed = self.profile.default_speed
         self._pen_pos = self.profile.pos_home
 
         self._pen_is_up = pen_starts_up
@@ -58,7 +58,7 @@ class GCoder:
     @require_unlocked
     def __exit__(self, exc_type, exc_value, traceback):
         """Exits the context of a 'with' statement, which closes the gcode file. This GCoder instance should no longer be used."""
-        self.save_drawing()
+        self.close()
 
         return False
     
@@ -91,10 +91,10 @@ class GCoder:
         self.__file.write((prefix + "--- " + comment + " ---") if as_header else (prefix + comment))
     
     @require_unlocked
-    def set_movement_speed(self, movement_speed: float):
+    def set_speed(self, speed: float):
         """Sets a new movement speed."""
-        self._movement_speed = movement_speed
-        self.add_command(f"G1 F{self._movement_speed} ; Set movement speed")
+        self._speed = speed
+        self.add_command(f"G1 F{self._speed} ; Set movement speed")
     
     @require_unlocked
     def draw_path(self, path: Sequence[Point2D], scale: float | tuple[float, float] = 1.0, offset: tuple[float, float] = (0.0, 0.0), quick_move_to_start: bool = False, drag_to_start: bool = False, loop_to_start: bool = False):
@@ -116,20 +116,20 @@ class GCoder:
         else:
             modified_path = tuple((pos[0] * scale[0] + offset[0], pos[1] * scale[1] + offset[1]) for pos in path)
         
-        self.move_to(modified_path[0], quick_move=quick_move_to_start)
+        self.move(modified_path[0], quick_move=quick_move_to_start)
         self.pendown()
 
         for pos in modified_path[1:]:
-            self.move_to(pos)
+            self.move(pos)
         
         if loop_to_start:
-            self.move_to(modified_path[0])
+            self.move(modified_path[0])
         
         if pen_was_up:
             self.penup()
     
     @require_unlocked
-    def move_to(self, pos: Point2D, quick_move: bool = False):
+    def move(self, pos: Point2D, quick_move: bool = False):
         """Moves to a new position. Set 'quick_move' to True for g-code 'G00' (instead of 'G01')."""
         self.add_command(("G00" if quick_move else "G01") + f" X{pos[0]:.{self.profile.round_pos_to}f} Y{pos[1]:.{self.profile.round_pos_to}f}")
         self._pen_pos = (round(pos[0], self.profile.round_pos_to), round(pos[1], self.profile.round_pos_to))
@@ -159,7 +159,7 @@ class GCoder:
             self.add_command(f"G4 P{seconds:.{self.profile.round_time_to}f} ; Wait for {seconds:.{self.profile.round_time_to}f} seconds")
     
     @require_unlocked
-    def save_drawing(self):
+    def close(self):
         """Writes the g-code file footer and closes the file. This GCoder instance should no longer be used.
         
         The footer is based on profile.footer_hook or, if profile.footer_hook is None, then each string from profile.footer_commands is written on a new line."""
@@ -170,9 +170,9 @@ class GCoder:
             for command in self.profile.footer_commands:
                 self.add_command(command)
         
-        self.close_file()
+        self.__close_file()
     
-    def close_file(self):
+    def __close_file(self):
         """Closes the g-code file and locks the GCoder instance."""
         self.__file.flush()
         self.__file.close()
