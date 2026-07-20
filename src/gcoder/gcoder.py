@@ -8,7 +8,7 @@ def require_unlocked(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if self.is_locked:
-            raise RuntimeError("Cannot use a GCoder instance whose g-code file is complete (you already ran 'GCoder.save_drawing()' or 'GCoder.__exit__()').")
+            raise RuntimeError("Cannot use a GCoder instance whose g-code file is complete (you already ran 'GCoder.close()' or 'GCoder.__exit__()').")
         return method(self, *args, **kwargs)
     return wrapper
 
