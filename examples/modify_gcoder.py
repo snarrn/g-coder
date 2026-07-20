@@ -4,7 +4,7 @@ Showcases how to make a PlotterProfile so the GCoder class work with your pen pl
 These particular edits were made to work with an EleksMaker EleksDraw.
 """
 from gcoder import GCoder, require_unlocked
-from plotter_profile import PlotterProfile
+from gcoder.plotter_profile import PlotterProfile
 
 def eleks_header(g: GCoder):
     """Writes a g-code file header for the EleksMaker EleksDraw."""
