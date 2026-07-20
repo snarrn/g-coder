@@ -12,12 +12,12 @@ def eleks_header(g: GCoder):
     g.add_command("A1   ; Enable EleksDraw RC Servo Mode")
     g.add_command("G21  ; Set units to millimeters")
     g.add_command("G90  ; Use absolute positioning")
-    g.set_movement_speed(g.movement_speed)
+    g.set_speed(g.speed)
     g.add_space()
 
     g.add_comment("To Home Position", as_header=True)
     g.penup()
-    g.move_to(g.profile.pos_home, quick_move=True)
+    g.move(g.profile.pos_home, quick_move=True)
     g.add_space()
 
     g.add_comment("Start Drawing!", as_header=True)
@@ -27,13 +27,13 @@ def eleks_footer(g: GCoder):
     g.add_space()
     g.add_comment("Ending the Drawing", as_header=True)
     g.penup()
-    g.move_to(g.profile.pos_home)
+    g.move(g.profile.pos_home)
     g.add_space()
 
 eleks_profile = PlotterProfile(command_pen_up="M03 S0  ; Penup",
                                command_pen_down="M03 S35 ; Pendown",
                                wait_time_pen_move=0.175,
-                               default_movement_speed=200,
+                               default_speed=200,
                                pos_home=(0, 0),
                                round_pos_to=4,
                                round_time_to=4,
